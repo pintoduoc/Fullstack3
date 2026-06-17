@@ -1,0 +1,108 @@
+services:
+  # Base de Datos MySQL Compartida (con esquemas separados lógicamente por Liquibase)
+  mysql-db:
+    image: mysql:8.0
+    container_name: valledelsol-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_emergencias # Ajusta esto según el nombre que uses en tu init.sql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+
+  # 1. Microservicio de Usuarios y Brigadas
+  user-service:
+    build:
+      context: ./user-service
+    container_name: user-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql-db
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_emergencias?useSSL=false&allowPublicKeyRetrieval=true
+    networks:
+      - app-network
+
+  # 2. Microservicio de Reportes de Incendio
+  report-service:
+    build:
+      context: ./report-service
+    container_name: report-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql-db
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_emergencias?useSSL=false&allowPublicKeyRetrieval=true
+    networks:
+      - app-network
+
+  # 3. Microservicio de Alertas
+  alert-service:
+    build:
+      context: ./alert-service
+    container_name: alert-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql-db
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_emergencias?useSSL=false&allowPublicKeyRetrieval=true
+    networks:
+      - app-network
+
+  # 4. Backend For Frontend (Nuevo)
+  bff-service:
+    build:
+      context: ./bff-service
+    container_name: bff-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - user-service
+      - report-service
+      - alert-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - app-network
+
+  # 5. API Gateway (Punto de entrada único)
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - report-service
+      - alert-service
+      - bff-service
+    networks:
+      - app-network
+
+  # 6. SERVICIO FRONTEND
+  frontend:
+    build:
+      # Ajusta el nombre de la carpeta según cómo clones el repositorio en tu EC2
+      context: ../Fullstack3_CasoSemestralF_Frontend
+    container_name: valledelsol-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,25 @@
+Repositorios del Sistema Fullstack3 - Evaluación Parcial 3
+
+1. Orquestación:
+   https://github.com/pintoduoc/Fullstack3.git
+
+2. Frontend (Vue.js + Vite):
+   https://github.com/pintoduoc/Fullstack3_CasoSemestralF_Frontend.git
+
+3. API Gateway (Spring Cloud Gateway):
+   https://github.com/pintoduoc/Fullstack3-API-Gateway.git
+
+4. BFF (Backend For Frontend):
+   https://github.com/pintoduoc/Fullstack3-BFF.git
+
+5. User Service (Usuarios y Brigadas):
+   https://github.com/pintoduoc/Fullstack3-User-Service.git
+
+6. Report Service (Reportes de Incendio):
+   https://github.com/pintoduoc/Fullstack3-Report-Service.git
+
+7. Alert Service (Alertas de Emergencia):
+   https://github.com/pintoduoc/Fullstack3-Alert-Service.git
+
+8. Eureka Server (Service Discovery):
+   https://github.com/noxtope-git/Fullstack3-Eureka-Server.git

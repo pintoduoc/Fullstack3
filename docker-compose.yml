@@ -14,79 +14,100 @@ services:
     networks:
       - app-network
 
+  # Eureka Service Discovery
+  eureka-server:
+    build:
+      context: ../Fullstack3-Eureka-Server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+
   # 1. Microservicio de Usuarios y Brigadas
   user-service:
     build:
-      context: ./user-service
+      context: ../Fullstack3-User-Service
     container_name: user-service
     ports:
       - "8082:8082"
     depends_on:
       - mysql-db
+      - eureka-server
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_emergencias?useSSL=false&allowPublicKeyRetrieval=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     networks:
       - app-network
 
   # 2. Microservicio de Reportes de Incendio
   report-service:
     build:
-      context: ./report-service
+      context: ../Fullstack3-Report-Service
     container_name: report-service
     ports:
       - "8081:8081"
     depends_on:
       - mysql-db
+      - eureka-server
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_emergencias?useSSL=false&allowPublicKeyRetrieval=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     networks:
       - app-network
 
   # 3. Microservicio de Alertas
   alert-service:
     build:
-      context: ./alert-service
+      context: ../Fullstack3-Alert-Service
     container_name: alert-service
     ports:
       - "8083:8083"
     depends_on:
       - mysql-db
+      - eureka-server
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_emergencias?useSSL=false&allowPublicKeyRetrieval=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     networks:
       - app-network
 
   # 4. Backend For Frontend (Nuevo)
   bff-service:
     build:
-      context: ./bff-service
+      context: ../Fullstack3-BFF
     container_name: bff-service
     ports:
       - "8084:8084"
     depends_on:
+      - eureka-server
       - user-service
       - report-service
       - alert-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     networks:
       - app-network
 
   # 5. API Gateway (Punto de entrada único)
   api-gateway:
     build:
-      context: ./api-gateway
+      context: ../Fullstack3-API-Gateway
     container_name: api-gateway
     ports:
       - "8080:8080"
     depends_on:
+      - eureka-server
       - user-service
       - report-service
       - alert-service
       - bff-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     networks:
       - app-network
 
@@ -99,6 +120,7 @@ services:
     ports:
       - "80:80"
     depends_on:
+      - eureka-server
       - api-gateway
     networks:
       - app-network
